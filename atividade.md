@@ -176,11 +176,11 @@ class UsuarioController extends Controller
 
     public function index() {
         $data['usuarios'] = $this->service->getUsuarios();
-        $this->view('usuario/usuario_list', $data);
+        $this->view('usuarios/usuario_list', $data);
     }
 
     public function cadastrar() {
-        $this->view('usuario/usuario_create');
+        $this->view('usuarios/usuario_create');
     }
 
     public function salvar() {
@@ -351,7 +351,7 @@ Aqui são necessário dois métodos: o método ```editar()``` que será respons�
 public function editar() {
     $id = $_GET['id'];
     $data['usuario'] = $this->service->getUsuarioById($id);
-    $this->view('usuario/usuario_edit', $data);
+    $this->view('usuarios/usuario_edit', $data);
 }
 
 public function atualizar() {
