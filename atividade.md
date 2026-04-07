@@ -175,21 +175,15 @@ class UsuarioController extends Controller
 
     public function index() {
         $data['usuarios'] = $this->service->getUsuarios();
-        $this->view('usuarios/usuario_list', $data);
+        $this->view('usuario/usuario_list', $data);
     }
 
-    public function cadastrar() {
-        $this->view('usuarios/usuario_create');
+    public function criar() {
+        $this->view('usuario/usuario_create');
     }
 
     public function salvar() {
-        $usuario = new Usuario(
-            0, 
-            $_POST['nomeUsuario'], 
-            $_POST['email'], 
-            $_POST['senha'], 
-            $_POST['perfil']
-        );
+        $usuario = Usuario::fromArray($_POST);
         $this->service->saveUsuario($usuario);
         $this->redirect(URL_BASE . '/usuarios');
     }
@@ -200,30 +194,45 @@ class UsuarioController extends Controller
 
 ## 6. A View de Listagem (`app/views/usuario/usuario_list.php`)
 
-Use o Bootstrap 5 para criar uma tabela bonita e funcional.
+Use o Bootstrap 5 para criar uma tabela simples para listar os dados fundamentais.
 
 ```html
-<div class="container mt-5">
-    <h2>Lista de Usuários</h2>
-    <a href="<?= URL_BASE ?>/usuarios/cadastrar" class="btn btn-primary mb-3">Novo Usuário</a>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Perfil</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($usuarios as $u): ?>
-                <tr>
-                    <td><?= $u['nomeUsuario'] ?></td>
-                    <td><?= $u['email'] ?></td>
-                    <td><?= $u['perfil'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Lista de Usuários</h2>
+        <a href="<?= URL_BASE ?>/usuarios/cadastrar" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Novo Usuário
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome de Usuário</th>
+                            <th>E-mail</th>
+                            <th>Perfil</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($usuarios as $u): ?>
+                            <tr>
+                                <td><?= $u['id'] ?></td>
+                                <td><?= $u['nomeUsuario'] ?></td>
+                                <td><?= $u['email'] ?></td>
+                                <td>
+                                    <span class="badge bg-secondary"><?= $u['perfil'] ?></span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 ```
 
@@ -238,7 +247,7 @@ O fluxo começa por aqui! Uma rota chama uma controller, que chama um método da
 ```php
 // Adicione em public/index.php
 $router->get('/usuarios', 'UsuarioController@index');
-$router->get('/usuarios/cadastrar', 'UsuarioController@cadastrar');
+$router->get('/usuarios/cadastrar', 'UsuarioController@criar');
 $router->post('/usuarios/salvar', 'UsuarioController@salvar');
 ```
 
@@ -253,47 +262,76 @@ Teste sua aplicação, faça o cadastro de um usuário e verifique se ele foi sa
 O formulário de cadastro coleta as informações do novo usuário para serem processadas pelo Controller.
 
 ```html
-<div class="container mt-5">
-    <div class="card shadow-sm col-md-6 mx-auto border-primary">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Novo Usuário</h4>
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Projeto Integrador • Novo Usuário</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Novo Usuário</h2>
+            <a href="<?= URL_BASE ?>/usuarios" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
         </div>
-        <div class="card-body">
-            <form action="<?= URL_BASE ?>/usuarios/salvar" method="post">
-                
-                <div class="mb-3">
-                    <label for="nomeUsuario" class="form-label">Nome de Usuário</label>
-                    <input type="text" class="form-control" id="nomeUsuario" name="nomeUsuario" placeholder="Digite o nome de usuário">
-                </div>
 
-                <div class="mb-3">
-                    <label for="email" class="form-label">E-mail</label>
-                    <input type="email" class="form-control" id="email" name="email" placeholder="email@exemplo.com">
-                </div>
+        <div class="card shadow-sm col-md-8 mx-auto">
+            <div class="card-body p-4">
+                <form action="<?= URL_BASE ?>/usuarios/salvar" method="post">
+                    <div class="mb-3">
+                        <label for="nomeUsuario" class="form-label">Nome de Usuário</label>
+                        <input type="text" class="form-control" id="nomeUsuario" name="nomeUsuario" value="<?= $usuario['nomeUsuario'] ?? '' ?>">
+                        <?php if (isset($erros['nomeUsuario'])): ?>
+                            <div class="text-danger small"><?= $erros['nomeUsuario'] ?></div>
+                        <?php endif; ?>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="senha" class="form-label">Senha</label>
-                    <input type="password" class="form-control" id="senha" name="senha" placeholder="Crie uma senha forte">
-                </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="email" name="email" value="<?= $usuario['email'] ?? '' ?>">
+                        <?php if (isset($erros['email'])): ?>
+                            <div class="text-danger small"><?= $erros['email'] ?></div>
+                        <?php endif; ?>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="perfil" class="form-label">Perfil de Acesso</label>
-                    <select class="form-select" id="perfil" name="perfil">
-                        <option value="user" selected>Usuário Padrão</option>
-                        <option value="admin">Administrador</option>
-                    </select>
-                </div>
+                    <div class="mb-3">
+                        <label for="senha" class="form-label">Senha</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="senha" name="senha">
+                        </div>
+                        <?php if (isset($erros['senha'])): ?>
+                            <div class="text-danger small"><?= $erros['senha'] ?></div>
+                        <?php endif; ?>
+                    </div>
 
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i> Salvar Usuário
-                    </button>
-                    <a href="<?= URL_BASE ?>/usuarios" class="btn btn-outline-secondary">Cancelar</a>
-                </div>
-            </form>
+                    <div class="mb-3">
+                        <label for="perfil" class="form-label">Perfil</label>
+                        <select class="form-select" id="perfil" name="perfil">
+                            <option value="user" <?= (isset($usuario['perfil']) && $usuario['perfil'] == 'user') ? 'selected' : '' ?>>Usuário Padrão</option>
+                            <option value="admin" <?= (isset($usuario['perfil']) && $usuario['perfil'] == 'admin') ? 'selected' : '' ?>>Administrador</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-circle"></i> Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
 ```
 
 ---
@@ -350,7 +388,7 @@ Aqui são necessário dois métodos: o método ```editar()``` que será respons�
 public function editar() {
     $id = $_GET['id'];
     $data['usuario'] = $this->service->getUsuarioById($id);
-    $this->view('usuarios/usuario_edit', $data);
+    $this->view('usuario/usuario_edit', $data);
 }
 
 public function atualizar() {
@@ -384,47 +422,79 @@ $router->post('/usuarios/atualizar', 'UsuarioController@atualizar');
 Diferente do cadastro, a view de edição já vem com os campos preenchidos e aponta para a rota de atualização.
 
 ```html
-<div class="container mt-5">
-    <div class="card shadow-sm col-md-6 mx-auto border-primary">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Editar Usuário</h4>
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Projeto Integrador • Editar Usuário</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Editar Usuário</h2>
+            <a href="<?= URL_BASE ?>/usuarios" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
         </div>
-        <div class="card-body">
-            <form action="<?= URL_BASE ?>/usuarios/atualizar" method="post">
-                <!-- Campo oculto para o ID -->
-                <input type="hidden" name="id" value="<?= $usuario['id'] ?>">
 
-                <div class="mb-3">
-                    <label for="nomeUsuario" class="form-label">Nome de Usuário</label>
-                    <input type="text" class="form-control" id="nomeUsuario" name="nomeUsuario" value="<?= $usuario['nomeUsuario'] ?>">
-                </div>
+        <div class="card shadow-sm col-md-8 mx-auto">
+            <div class="card-body p-4">
+                <form action="<?= URL_BASE ?>/usuarios/atualizar" method="post">
+                    <input type="hidden" name="id" value="<?= $usuario['id'] ?>">
 
-                <div class="mb-3">
-                    <label for="email" class="form-label">E-mail</label>
-                    <input type="email" class="form-control" id="email" name="email" value="<?= $usuario['email'] ?>">
-                </div>
+                    <div class="mb-3">
+                        <label for="nomeUsuario" class="form-label">Nome de Usuário</label>
+                        <input type="text" class="form-control" id="nomeUsuario" name="nomeUsuario" value="<?= $usuario['nomeUsuario'] ?? '' ?>">
+                        <?php if (isset($erros['nomeUsuario'])): ?>
+                            <div class="text-danger small"><?= $erros['nomeUsuario'] ?></div>
+                        <?php endif; ?>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="senha" class="form-label">Nova Senha (Deixe em branco para não alterar)</label>
-                    <input type="password" class="form-control" id="senha" name="senha">
-                </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="email" name="email" value="<?= $usuario['email'] ?? '' ?>">
+                        <?php if (isset($erros['email'])): ?>
+                            <div class="text-danger small"><?= $erros['email'] ?></div>
+                        <?php endif; ?>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="perfil" class="form-label">Perfil de Acesso</label>
-                    <select class="form-select" id="perfil" name="perfil">
-                        <option value="user" <?= $usuario['perfil'] === 'user' ? 'selected' : '' ?>>Usuário Padrão</option>
-                        <option value="admin" <?= $usuario['perfil'] === 'admin' ? 'selected' : '' ?>>Administrador</option>
-                    </select>
-                </div>
+                    <div class="mb-3">
+                        <label for="senha" class="form-label">Senha (Preencha apenas se quiser alterar)</label>
+                        <div class="input-group">
+                            <input type="password" class="password form-control" id="senha" name="senha">
+                        </div>
+                        <?php if (isset($erros['senha'])): ?>
+                            <div class="text-danger small"><?= $erros['senha'] ?></div>
+                        <?php endif; ?>
+                    </div>
 
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary">Atualizar Dados</button>
-                    <a href="<?= URL_BASE ?>/usuarios" class="btn btn-outline-secondary">Cancelar</a>
-                </div>
-            </form>
+                    <div class="mb-3">
+                        <label for="perfil" class="form-label">Perfil</label>
+                        <select class="form-select" id="perfil" name="perfil">
+                            <option value="user" <?= (isset($usuario['perfil']) && $usuario['perfil'] == 'user') ? 'selected' : '' ?>>Usuário Padrão</option>
+                            <option value="admin" <?= (isset($usuario['perfil']) && $usuario['perfil'] == 'admin') ? 'selected' : '' ?>>Administrador</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-circle"></i> Atualizar
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>
 ```
 
 ---
@@ -466,40 +536,72 @@ $router->get('/usuarios/excluir', 'UsuarioController@excluir');
 
 ## 15. Atualizando a View de Listagem (`app/views/usuario/usuario_list.php`)
 
-Atualize a view de listagem para incluir os botões de **editar** e **excluir**.
+Atualize a view de listagem para incluir os botões de **editar** e **excluir**. Agora vamos incluir também a estrutura completa do HTML.
 
 ```html
-<div class="container mt-5">
-    <h2>Lista de Usuários</h2>
-    <a href="<?= URL_BASE ?>/usuarios/cadastrar" class="btn btn-primary mb-3">Novo Usuário</a>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Perfil</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($usuarios as $u): ?>
-                <tr>
-                    <td><?= $u['nomeUsuario'] ?></td>
-                    <td><?= $u['email'] ?></td>
-                    <td><?= $u['perfil'] ?></td>
-                    <td>
-                        <a href="<?= URL_BASE ?>/usuarios/editar?id=<?= $u['id'] ?>" class="btn btn-primary btn-sm">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <a href="<?= URL_BASE ?>/usuarios/excluir?id=<?= $u['id'] ?>" class="btn btn-danger btn-sm">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Projeto Integrador • Lista de Usuários</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container py-5">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Lista de Usuários</h2>
+            <a href="<?= URL_BASE ?>/usuarios/cadastrar" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Novo Usuário
+            </a>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4 py-3">ID</th>
+                                <th class="px-4 py-3">Nome de Usuário</th>
+                                <th class="px-4 py-3">E-mail</th>
+                                <th class="px-4 py-3">Perfil</th>
+                                <th class="px-4 py-3 text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($usuarios as $u): ?>
+                                <tr>
+                                    <td class="px-4 py-3 align-middle"><?= $u['id'] ?></td>
+                                    <td class="px-4 py-3 align-middle"><?= $u['nomeUsuario'] ?></td>
+                                    <td class="px-4 py-3 align-middle"><?= $u['email'] ?></td>
+                                    <td class="px-4 py-3 align-middle">
+                                        <span class="badge bg-secondary"><?= $u['perfil'] ?></span>
+                                    </td>
+                                    <td class="px-4 py-3 align-middle text-end">
+                                        <a href="<?= URL_BASE ?>/usuarios/editar?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                        <a href="<?= URL_BASE ?>/usuarios/excluir?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Deseja excluir este usuário?')">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
 ```
 
 # 16. Regras de negócio para salvar um usuário
@@ -546,13 +648,7 @@ No `UsuarioController.php`, verificamos o retorno do serviço. Se for `false`, p
 
 ```php
 public function salvar() {
-    $usuario = new Usuario(
-        0, 
-        $_POST['nomeUsuario'], 
-        $_POST['email'], 
-        $_POST['senha'], 
-        $_POST['perfil']
-    );
+    $usuario = Usuario::fromArray($_POST);
 
     if ($this->service->saveUsuario($usuario)) {
         $this->redirect(URL_BASE . '/usuarios');
