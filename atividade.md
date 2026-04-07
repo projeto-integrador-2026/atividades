@@ -5,11 +5,16 @@
 
 Este guia conduzirá você para criação da gestão de usuários (CRUD) seguindo o padrão de arquitetura **MVC** utilizado em nosso projeto.
 
+Antes de tudo, baixe e execute o projeto mais atualizado e traduzido neste link: https://github.com/projeto-integrador-2026/projeto_integrador.
+
+Isso fará se sejam criadas as estruturas básicas do banco de dados.
+
 ---
 
 ## 1. Banco de Dados
 
-Antes de tudo, certifique-se de que a tabela `usuarios` existe no seu banco de dados. Caso não exista, execute o script abaixo:
+Antes de tudo, certifique-se de que a tabela `usuarios` existe no seu banco de dados e que existe um usuário do tipo administrador registrado. 
+Caso não exista, execute o script abaixo:
 
 ```sql
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -62,12 +67,6 @@ class Usuario
 
 
     // Getters e Setters (omitidos para brevidade neste guia)
-    public function getId(): int { return $this->id; }
-    public function getNomeUsuario(): string { return $this->nomeUsuario; }
-    public function getEmail(): string { return $this->email; }
-    public function getSenha(): string { return $this->senha; }
-    public function getPerfil(): string { return $this->perfil; }
-    public function getCriadoEm(): DateTimeImmutable { return $this->criadoEm; }
 }
 ```
 
