@@ -648,13 +648,17 @@ No `UsuarioController.php`, verificamos o retorno do serviço. Se for `false`, p
 
 ```php
 public function salvar() {
-    $usuario = Usuario::fromArray($_POST);
+    //Salvar
+    $usuario = new Usuario(0, $nomeUsuario, $email, $senha, $perfil);
 
     if ($this->service->saveUsuario($usuario)) {
         $this->redirect(URL_BASE . '/usuarios');
     } else {
-        // Aqui você poderia passar uma mensagem de erro para a view
-        echo "Erro: Este e-mail já está cadastrado!";
+
+        $data["usuario"] = $_POST;
+        $data['erro']['email'] = "Erro: Este e-mail já está cadastrado!";
+
+        $this->view('usuarios/usuario_create', $data);
     }
 }
 ```
